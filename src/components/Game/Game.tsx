@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Children } from 'react';
 import styled from 'styled-components';
 import Confetti from '../Confetti/Confetti';
 
@@ -145,7 +145,7 @@ const TowerArea = styled.div`
     color: ${({ theme }) => theme.colors.textSecondary};
     font-size: 0.9rem;
     pointer-events: none;
-    display: ${({ children }) => (React.Children.count(children) > 0 ? 'none' : 'block')};
+    display: ${({ children }) => (Children.count(children) > 0 ? 'none' : 'block')};
   }
 `;
 
