@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, Children } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import Confetti from '../Confetti/Confetti';
+import { theme } from '../../theme';
 
 interface NumberBlockProps {
   value: number;
@@ -145,7 +146,7 @@ const TowerArea = styled.div`
     color: ${({ theme }) => theme.colors.textSecondary};
     font-size: 0.9rem;
     pointer-events: none;
-    display: ${({ children }) => (Children.count(children) > 0 ? 'none' : 'block')};
+    display: ${({ children }) => (React.Children.count(children) > 0 ? 'none' : 'block')};
   }
 `;
 
@@ -248,9 +249,10 @@ const ResetButton = styled.button`
 
 const Game: React.FC = () => {
   const [targetNumber, setTargetNumber] = useState<number>(0);
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
-  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [currentSum, setCurrentSum] = useState<number>(0);
+  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
+  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
 
   // Initialize game
@@ -262,46 +264,55 @@ const Game: React.FC = () => {
     // Generate a random target number between 30 and 100
     const newTarget = Math.floor(Math.random() * 71) + 30;
     setTargetNumber(newTarget);
-    setSelectedNumbers([]);
     setCurrentSum(0);
+    setSelectedNumbers([]);
     setGameStatus('playing');
-    setShowConfetti(false);
+    setMessage(null);
   };
 
   const checkGameStatus = useCallback((sum: number) => {
     if (sum === targetNumber) {
       setGameStatus('won');
       setShowConfetti(true);
+      setMessage({ text: 'Tillykke! Du har vundet!', isError: false });
       setTimeout(() => setShowConfetti(false), 3000);
     } else if (sum > targetNumber) {
       setGameStatus('lost');
+      setMessage({ text: 'Desværre, du har tabt. Prøv igen!', isError: true });
     }
   }, [targetNumber]);
 
-  const handleNumberClick = (number: number, fromTower = false) => {
-    // If the game is lost, only allow removing numbers
-    if (gameStatus === 'lost' && !fromTower) {
-      return;
-    }
+  const handleNumberClick = (number: number, fromTower: boolean = false) => {
+    // If clicking in the tower, always allow removal regardless of game status
+    if (!fromTower && gameStatus === 'lost') return;
     
-    // If the number is already selected, remove it
-    const numberIndex = selectedNumbers.findIndex(n => n === number);
-    if (numberIndex !== -1) {
-      const newNumbers = [...selectedNumbers];
-      newNumbers.splice(numberIndex, 1);
-      setSelectedNumbers(newNumbers);
+    let newSelectedNumbers: number[];
+    let newSum: number;
+    
+    const numberIndex = selectedNumbers.indexOf(number);
+    
+    if (numberIndex === -1) {
+      // Add number
+      newSelectedNumbers = [...selectedNumbers, number];
+      newSum = currentSum + number;
+    } else {
+      // Remove number
+      newSelectedNumbers = [...selectedNumbers];
+      newSelectedNumbers.splice(numberIndex, 1);
+      newSum = currentSum - number;
       
-      // If we were in 'lost' state and removed a number, go back to 'playing'
+      // If we're removing a number after losing, reset the game status to playing
       if (gameStatus === 'lost') {
         setGameStatus('playing');
+        setMessage(null);
       }
-      return;
     }
     
-    // If the game is not lost, add the number
-    if (gameStatus !== 'lost') {
-      setSelectedNumbers([...selectedNumbers, number]);
-    }
+    setCurrentSum(newSum);
+    setSelectedNumbers(newSelectedNumbers);
+    
+    // Always check game status after any number change
+    checkGameStatus(newSum);
   };
 
   // Generate numbers 1-20 for the grid
