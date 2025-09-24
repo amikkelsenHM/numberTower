@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/tal-tarnet-game/static/css/main.e6c13ad2.css",
-    "main.js": "/tal-tarnet-game/static/js/main.ea545531.js",
-    "static/js/453.2a20cef6.chunk.js": "/tal-tarnet-game/static/js/453.2a20cef6.chunk.js",
-    "index.html": "/tal-tarnet-game/index.html",
-    "main.e6c13ad2.css.map": "/tal-tarnet-game/static/css/main.e6c13ad2.css.map",
-    "main.ea545531.js.map": "/tal-tarnet-game/static/js/main.ea545531.js.map",
-    "453.2a20cef6.chunk.js.map": "/tal-tarnet-game/static/js/453.2a20cef6.chunk.js.map"
+    "main.css": "./static/css/main.e6c13ad2.css",
+    "main.js": "./static/js/main.0b6e1c60.js",
+    "static/js/453.2a20cef6.chunk.js": "./static/js/453.2a20cef6.chunk.js",
+    "index.html": "./index.html",
+    "main.e6c13ad2.css.map": "./static/css/main.e6c13ad2.css.map",
+    "main.0b6e1c60.js.map": "./static/js/main.0b6e1c60.js.map",
+    "453.2a20cef6.chunk.js.map": "./static/js/453.2a20cef6.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.ea545531.js"
+    "static/js/main.0b6e1c60.js"
   ]
 }
