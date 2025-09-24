@@ -20,7 +20,7 @@ const Confetti: React.FC<ConfettiProps> = ({ active }) => {
     wobbleSpeed: number;
   }>>([]);
   const particleCount = 150;
-  const particleColors = ['#ffffff', '#000000', '#ffffff', '#000000', '#ffffff', '#000000'];
+  const particleColors = ['#000000', '#FFFFFF', '#333333'];
 
   useEffect(() => {
     if (!active || !canvasRef.current) return;
@@ -28,6 +28,9 @@ const Confetti: React.FC<ConfettiProps> = ({ active }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Store colors in a variable to avoid dependency array issues
+    const colors = particleColors;
 
     // Set canvas size
     canvas.width = window.innerWidth;
@@ -51,7 +54,7 @@ const Confetti: React.FC<ConfettiProps> = ({ active }) => {
     const animate = (time: number) => {
       if (!ctx) return;
       
-      const deltaTime = time - lastTime;
+      // Remove unused deltaTime variable since it's not being used
       lastTime = time;
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);

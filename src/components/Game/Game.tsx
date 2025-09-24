@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import Confetti from '../Confetti/Confetti';
-import { theme } from '../../theme';
 
 interface NumberBlockProps {
   value: number;
@@ -249,10 +248,9 @@ const ResetButton = styled.button`
 
 const Game: React.FC = () => {
   const [targetNumber, setTargetNumber] = useState<number>(0);
-  const [currentSum, setCurrentSum] = useState<number>(0);
-  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
-  const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
+  const [currentSum, setCurrentSum] = useState<number>(0);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
 
   // Initialize game
