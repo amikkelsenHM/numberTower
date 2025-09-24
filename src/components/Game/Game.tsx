@@ -1,20 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Confetti from '../Confetti/Confetti';
-import { theme } from '../../theme';
-
-interface NumberBlockProps {
-  value: number;
-  onClick: () => void;
-  disabled?: boolean;
-  isSelected?: boolean;
-}
 
 const GameContainer = styled.div`
   display: flex;
   min-height: 100vh;
   background: #000;
-  font-family: Arial, sans-serif;
+  font-family: monospace;
   color: #fff;
   align-items: center;
   justify-content: center;
@@ -22,26 +14,6 @@ const GameContainer = styled.div`
   box-sizing: border-box;
 `;
 
-const Title = styled.h1`
-  font-size: 2rem;
-  margin: 0 0 ${({ theme }) => theme.spacing.large} 0;
-  font-weight: 600;
-  width: 100%;
-  text-align: left;
-  color: ${({ theme }) => theme.colors.primary};
-  padding-bottom: ${({ theme }) => theme.spacing.small};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  font-family: ${({ theme }) => theme.fonts.heading};
-`;
-
-const Subtitle = styled.h2`
-  font-size: 1rem;
-  margin: 0 0 ${({ theme }) => theme.spacing.large};
-  text-align: center;
-  max-width: 600px;
-  color: ${({ theme }) => theme.colors.secondary};
-  font-weight: normal;
-`;
 
 const GameLayout = styled.div`
   display: flex;
@@ -60,148 +32,7 @@ const Panel = styled.div`
   flex: 1;
 `;
 
-const TargetNumber = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-align: center;
-  width: 100%;
-  margin-bottom: 20px;
-  
-  &::before {
-    content: 'Mål: ';
-    font-weight: normal;
-  }
-`;
-
-const NumberGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 20px; /* Match tower padding */
-  width: 100%;
-  height: 400px; /* Fixed height to match tower */
-  align-content: start;
-`;
-
-const NumberBlock = styled.button<{ isSelected?: boolean }>`
-  aspect-ratio: 1;
-  border: 1px solid #fff;
-  background: #fff;
-  color: #000;
-  font-family: monospace;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover:not(:disabled) {
-    background: #000;
-    color: #fff;
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  font-weight: 500;
-  cursor: pointer;
-  transition: ${({ theme }) => theme.transitions.default};
-  
-  &:hover:not(:disabled) {
-    background: ${({ theme }) => theme.colors.highlight};
-    transform: translateY(-2px);
-    box-shadow: ${({ theme }) => theme.shadows.small};
-  }
-  
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-  
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    transform: none !important;
-  }
-`;
-
-const TowerArea = styled.div`
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  min-height: 448px; /* 400px + 48px to match number grid height */
-  height: 448px; /* 400px + 48px to match number grid height */
-  width: 100%;
-  padding: 20px;
-  border: 1px solid #333;
-  
-  &::before {
-    content: 'Byg dit tårn her';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: ${({ theme }) => theme.colors.textSecondary};
-    font-size: 0.9rem;
-    pointer-events: none;
-    display: ${({ children }) => (React.Children.count(children) > 0 ? 'none' : 'block')};
-  }
-`;
-
-interface TowerBlockProps {
-  onClick?: () => void;
-}
-
-const TowerBlock = styled.div<TowerBlockProps>`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 44px;
-  margin: 2px 0;
-  background: ${({ theme }) => theme.colors.highlight};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  font-family: ${({ theme }) => theme.fonts.primary};
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.primary};
-  cursor: pointer;
-  transition: ${({ theme }) => theme.transitions.default};
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.colors.background};
-    transform: translateY(-1px);
-    box-shadow: ${({ theme }) => theme.shadows.small};
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-const GameMessage = styled.div<{ isError?: boolean }>`
-  padding: 12px;
-  background: #111;
-  border-left: 4px solid ${({ isError }) => isError ? '#f00' : '#0f0'};
-  color: #fff;
-  font-size: 0.9rem;
-  text-align: left;
-  width: 100%;
-  opacity: 0;
-  animation: fadeIn 0.3s ease forwards;
-  
-  @keyframes fadeIn {
-    to {
-      opacity: 1;
-    }
-  }
-`;
-
-const Overlay = styled.div`
+const OverlayContainer = styled.div`
   position: fixed;
   top: 0;
   left: 0;
@@ -218,14 +49,14 @@ const Overlay = styled.div`
   padding: 20px;
 `;
 
-const MessageText = styled.div`
+const OverlayMessage = styled.div`
   font-size: 2.5rem;
   font-weight: bold;
   margin-bottom: 30px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 `;
 
-const ResetButton = styled.button`
+const OverlayButton = styled.button`
   padding: 15px 30px;
   background: white;
   color: black;
@@ -247,12 +78,151 @@ const ResetButton = styled.button`
   }
 `;
 
+const NumberGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 20px; /* Match tower padding */
+  width: 100%;
+  height: 400px; /* Fixed height to match tower */
+  align-content: start;
+`;
+
+const NumberBlock = styled.button`
+  aspect-ratio: 1;
+  border: 1px solid #fff;
+  background: #fff;
+  color: #000;
+  font-family: monospace;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover:not(:disabled) {
+    background: #000;
+    color: #fff;
+  }
+  
+  font-weight: 500;
+  cursor: pointer;
+  transition: ${({ theme }) => theme.transitions.default};
+  
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.colors.highlight};
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.small};
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+`;
+
+const TowerArea = styled.div`
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  min-height: 448px; /* 400px + 48px to match number grid height */
+  height: 448px; /* 400px + 48px to match number grid height */
+  width: 100%;
+  padding: 20px;
+  border: 1px solid #333;
+`;
+
+const StatsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  width: 100%;
+  padding: 0 20px;
+`;
+
+const StatBox = styled.div`
+  font-size: 1.5rem;
+  text-align: center;
+  width: 100%;
+  max-width: 200px;
+  padding: 10px;
+  border: 1px solid #333;
+  border-radius: 4px;
+`;
+
+const TipBox = styled.div`
+  color: #999;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
+const EmptyTowerText = styled.div`
+  color: #333;
+  font-size: 0.9rem;
+`;
+
+const PanelNoPadding = styled(Panel)`
+  padding: 0;
+`;
+
+const SumValue = styled.strong<{ danger?: boolean }>`
+  color: ${({ danger }) => (danger ? '#ff4444' : 'inherit')};
+`;
+
+interface TowerBlockProps {
+  onClick?: () => void;
+}
+
+const TowerBlock = styled.div<TowerBlockProps>`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 44px;
+  margin: 2px 0;
+  background: #fff;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #000;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
 const Game: React.FC = () => {
   const [targetNumber, setTargetNumber] = useState<number>(0);
   const [currentSum, setCurrentSum] = useState<number>(0);
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
-  const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  // Removed unused message state
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
 
   // Initialize game
@@ -267,59 +237,57 @@ const Game: React.FC = () => {
     setCurrentSum(0);
     setSelectedNumbers([]);
     setGameStatus('playing');
-    setMessage(null);
+    setShowConfetti(false);
   };
 
-  const checkGameStatus = useCallback((sum: number) => {
+  const checkGameStatus = (sum: number) => {
     if (sum === targetNumber) {
       setGameStatus('won');
       setShowConfetti(true);
-      setMessage({ text: 'Tillykke! Du har vundet!', isError: false });
       setTimeout(() => setShowConfetti(false), 3000);
     } else if (sum > targetNumber) {
       setGameStatus('lost');
-      setMessage({ text: 'Desværre, du har tabt. Prøv igen!', isError: true });
     }
-  }, [targetNumber]);
+  };
 
   const handleNumberClick = (number: number, fromTower: boolean = false) => {
-    // If clicking in the tower, always allow removal regardless of game status
-    if (!fromTower && gameStatus === 'lost') return;
+    if (gameStatus === 'won') return; // Don't allow changes after winning
     
-    let newSelectedNumbers: number[];
-    let newSum: number;
+    let updatedSelectedNumbers: number[];
+    let updatedSum: number;
     
     const numberIndex = selectedNumbers.indexOf(number);
     
     if (numberIndex === -1) {
-      // Add number
-      newSelectedNumbers = [...selectedNumbers, number];
-      newSum = currentSum + number;
-    } else {
-      // Remove number
-      newSelectedNumbers = [...selectedNumbers];
-      newSelectedNumbers.splice(numberIndex, 1);
-      newSum = currentSum - number;
+      // Add number - only allow if game is not lost or if we're removing from tower
+      if (gameStatus === 'lost' && !fromTower) return;
       
-      // If we're removing a number after losing, reset the game status to playing
-      if (gameStatus === 'lost') {
-        setGameStatus('playing');
-        setMessage(null);
-      }
+      updatedSelectedNumbers = [...selectedNumbers, number];
+      updatedSum = currentSum + number;
+    } else {
+      // Always allow removing numbers
+      updatedSelectedNumbers = [...selectedNumbers];
+      updatedSelectedNumbers.splice(numberIndex, 1);
+      updatedSum = currentSum - number;
     }
     
-    setCurrentSum(newSum);
-    setSelectedNumbers(newSelectedNumbers);
+    setCurrentSum(updatedSum);
+    setSelectedNumbers(updatedSelectedNumbers);
     
-    // Always check game status after any number change
-    checkGameStatus(newSum);
+    // Check if we're back in a valid state after removing numbers
+    if (updatedSum <= targetNumber) {
+      setGameStatus('playing');
+    }
+    
+    // Check win/lose conditions
+    checkGameStatus(updatedSum);
   };
 
   // Generate numbers 1-20 for the grid
-  const numbers = Array.from({ length: 20 }, (_, i) => i + 1);
+  const numbers: number[] = Array.from({ length: 20 }, (_, i) => i + 1);
 
   // Generate tower blocks
-  const towerBlocks = selectedNumbers.map((number, index) => (
+  const towerBlocks = selectedNumbers.map((number: number, index: number) => (
     <TowerBlock 
       key={index} 
       onClick={() => handleNumberClick(number, true)}
@@ -332,90 +300,50 @@ const Game: React.FC = () => {
   return (
     <GameContainer>
       {gameStatus === 'won' && (
-        <Overlay>
-          <MessageText>Tillykke! Du har vundet!</MessageText>
-          <ResetButton onClick={startNewGame}>Prøv igen</ResetButton>
-        </Overlay>
+        <OverlayContainer>
+          <OverlayMessage>Tillykke! Du har vundet!</OverlayMessage>
+          <OverlayButton onClick={startNewGame}>Prøv igen</OverlayButton>
+        </OverlayContainer>
       )}
       <GameLayout>
         <Panel>
           <TowerArea>
             {gameStatus === 'lost' && (
-              <div style={{
-                color: '#999',
-                fontSize: '0.9rem',
-                textAlign: 'center',
-                marginBottom: '10px',
-                padding: '5px 10px',
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                borderRadius: '4px',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}>
+              <TipBox>
                 Klik på et tal for at fjerne det
-              </div>
+              </TipBox>
             )}
             {towerBlocks.length > 0 ? towerBlocks : (
-              <div style={{ 
-                color: '#333', 
-                fontSize: '0.9rem',
-                marginTop: gameStatus === 'lost' ? '0' : 'auto',
-                marginBottom: gameStatus === 'lost' ? '0' : 'auto'
-              }}>
+              <EmptyTowerText>
                 Byg dit tårn her
-              </div>
+              </EmptyTowerText>
             )}
           </TowerArea>
           
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            gap: '10px',
-            marginTop: '20px',
-            width: '100%',
-            padding: '0 20px'
-          }}>
-            <div style={{ 
-              fontSize: '1.5rem',
-              textAlign: 'center',
-              width: '100%',
-              maxWidth: '200px',
-              padding: '10px',
-              border: '1px solid #333',
-              borderRadius: '4px'
-            }}>
+          <StatsContainer>
+            <StatBox>
               Mål: <strong>{targetNumber}</strong>
-            </div>
-            <div style={{ 
-              fontSize: '1.2rem',
-              textAlign: 'center',
-              width: '100%',
-              maxWidth: '200px',
-              padding: '10px',
-              border: '1px solid #333',
-              borderRadius: '4px'
-            }}>
-              Sum: <strong style={{ color: currentSum > targetNumber ? '#ff4444' : 'inherit' }}>{currentSum}</strong>
-            </div>
-          </div>
+            </StatBox>
+            <StatBox>
+              Sum: <SumValue danger={currentSum > targetNumber}>{currentSum}</SumValue>
+            </StatBox>
+          </StatsContainer>
 
         </Panel>
 
-        <Panel style={{ padding: 0 }}>
+        <PanelNoPadding>
           <NumberGrid>
             {numbers.map((number) => (
               <NumberBlock
                 key={number}
                 onClick={() => handleNumberClick(number)}
                 disabled={gameStatus !== 'playing' || selectedNumbers.includes(number)}
-                isSelected={selectedNumbers.includes(number)}
               >
                 {number}
               </NumberBlock>
             ))}
           </NumberGrid>
-        </Panel>
+        </PanelNoPadding>
       </GameLayout>
       
       <Confetti active={showConfetti} />

@@ -1,0 +1,363 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import styled, { keyframes } from 'styled-components';
+import Confetti from '../Confetti/Confetti';
+
+// Animation keyframes
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const GameContainer = styled.div`
+  display: flex;
+  min-height: 100vh;
+  background: #f5f5f5;
+  font-family: Arial, sans-serif;
+  color: #333;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+`;
+
+const GameLayout = styled.div`
+  display: flex;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  gap: 20px;
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+const Panel = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  min-height: 500px;
+`;
+
+const NumberGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+`;
+
+interface NumberBlockProps {
+  isSelected?: boolean;
+  disabled?: boolean;
+}
+
+const NumberBlock = styled.button<NumberBlockProps>`
+  aspect-ratio: 1;
+  border: 2px solid #ddd;
+  background: ${props => props.isSelected ? '#666' : '#f9f9f9'};
+  color: ${props => props.isSelected ? 'white' : '#333'};
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+
+  &:hover:not(:disabled) {
+    border-color: #999;
+    transform: translateY(-2px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const TowerArea = styled.div`
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  flex: 1;
+  padding: 20px;
+  background: #f9f9f9;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  min-height: 400px;
+  gap: 8px;
+  overflow-y: auto;
+`;
+
+const TowerBlock = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80%;
+  height: 50px;
+  margin: 2px 0;
+  background: #666;
+  color: white;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+`;
+
+const GameMessage = styled.div<{ isError?: boolean }>`
+  padding: 12px;
+  background: ${({ isError }) => isError ? '#ffebee' : '#e8f5e9'};
+  color: ${({ isError }) => isError ? '#c62828' : '#2e7d32'};
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 20px;
+`;
+
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 100;
+  color: white;
+  text-align: center;
+  padding: 20px;
+`;
+
+const MessageText = styled.div`
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 30px;
+`;
+
+const ResetButton = styled.button`
+  padding: 12px 24px;
+  background: white;
+  color: #333;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #f0f0f0;
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const Game: React.FC = () => {
+  const [targetNumber, setTargetNumber] = useState<number>(0);
+  const [currentSum, setCurrentSum] = useState<number>(0);
+  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
+  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  const [showConfetti, setShowConfetti] = useState<boolean>(false);
+
+  // Initialize game
+  useEffect(() => {
+    startNewGame();
+  }, []);
+
+  const startNewGame = () => {
+    const newTarget = Math.floor(Math.random() * 71) + 30;
+    setTargetNumber(newTarget);
+    setCurrentSum(0);
+    setSelectedNumbers([]);
+    setGameStatus('playing');
+    setMessage(null);
+  };
+
+  const checkGameStatus = useCallback((sum: number) => {
+    if (sum === targetNumber) {
+      setGameStatus('won');
+      setShowConfetti(true);
+      setMessage({ text: 'Tillykke! Du har vundet!', isError: false });
+      setTimeout(() => setShowConfetti(false), 3000);
+    } else if (sum > targetNumber) {
+      setGameStatus('lost');
+      setMessage({ text: 'Desværre, du har tabt. Prøv igen!', isError: true });
+    }
+  }, [targetNumber]);
+
+  const handleNumberClick = (number: number, fromTower: boolean = false) => {
+    if (!fromTower && gameStatus === 'lost') return;
+    
+    let newSelectedNumbers: number[];
+    let newSum: number;
+    
+    const numberIndex = selectedNumbers.indexOf(number);
+    
+    if (numberIndex === -1) {
+      newSelectedNumbers = [...selectedNumbers, number];
+      newSum = currentSum + number;
+    } else {
+      newSelectedNumbers = [...selectedNumbers];
+      newSelectedNumbers.splice(numberIndex, 1);
+      newSum = currentSum - number;
+      
+      if (gameStatus === 'lost') {
+        setGameStatus('playing');
+        setMessage(null);
+      }
+    }
+    
+    setCurrentSum(newSum);
+    setSelectedNumbers(newSelectedNumbers);
+    checkGameStatus(newSum);
+  };
+
+  // Generate numbers 1-20 for the grid
+  const numbers = Array.from({ length: 20 }, (_, i) => i + 1);
+
+  // Generate tower blocks
+  const towerBlocks = selectedNumbers.map((number, index) => (
+    <TowerBlock 
+      key={index} 
+      onClick={() => handleNumberClick(number, true)}
+      title="Klik for at fjerne"
+    >
+      {number}
+    </TowerBlock>
+  ));
+
+  return (
+    <GameContainer>
+      {gameStatus === 'won' && (
+        <Overlay>
+          <MessageText>Tillykke! Du har vundet!</MessageText>
+          <ResetButton onClick={startNewGame}>Prøv igen</ResetButton>
+        </Overlay>
+      )}
+      <GameLayout>
+        <Panel>
+          <h2>Tårn</h2>
+          <TowerArea>
+            {gameStatus === 'lost' && (
+              <div style={{
+                color: '#666',
+                fontSize: '0.9rem',
+                textAlign: 'center',
+                marginBottom: '10px',
+                padding: '5px 10px',
+                backgroundColor: 'rgba(0,0,0,0.05)',
+                borderRadius: '4px',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}>
+                Klik på et tal for at fjerne det
+              </div>
+            )}
+            {towerBlocks.length > 0 ? towerBlocks : (
+              <div style={{ 
+                color: '#999', 
+                fontSize: '0.9rem',
+                marginTop: gameStatus === 'lost' ? '0' : 'auto',
+                marginBottom: gameStatus === 'lost' ? '0' : 'auto',
+                fontStyle: 'italic'
+              }}>
+                Byg dit tårn her
+              </div>
+            )}
+          </TowerArea>
+          
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            gap: '10px',
+            marginTop: '20px',
+            width: '100%',
+            padding: '0 20px'
+          }}>
+            <div style={{ 
+              fontSize: '1.5rem',
+              textAlign: 'center',
+              width: '100%',
+              maxWidth: '200px',
+              padding: '10px',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              backgroundColor: '#f9f9f9'
+            }}>
+              Mål: <strong>{targetNumber}</strong>
+            </div>
+            <div style={{ 
+              fontSize: '1.2rem',
+              textAlign: 'center',
+              width: '100%',
+              maxWidth: '200px',
+              padding: '10px',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              backgroundColor: '#f9f9f9',
+              color: currentSum > targetNumber ? '#c62828' : 'inherit'
+            }}>
+              Sum: <strong>{currentSum}</strong>
+            </div>
+          </div>
+        </Panel>
+
+        <Panel style={{ padding: '20px' }}>
+          <h2>Tal</h2>
+          <NumberGrid>
+            {numbers.map((number) => (
+              <NumberBlock
+                key={number}
+                onClick={() => handleNumberClick(number)}
+                disabled={gameStatus !== 'playing' || selectedNumbers.includes(number)}
+                isSelected={selectedNumbers.includes(number)}
+              >
+                {number}
+              </NumberBlock>
+            ))}
+          </NumberGrid>
+          
+          {message && (
+            <GameMessage isError={message.isError}>
+              {message.text}
+            </GameMessage>
+          )}
+          
+          {gameStatus === 'lost' && (
+            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+              <ResetButton onClick={startNewGame}>Prøv igen</ResetButton>
+            </div>
+          )}
+        </Panel>
+      </GameLayout>
+      
+      <Confetti active={showConfetti} />
+    </GameContainer>
+  );
+};
+
+export default Game;
